@@ -38,15 +38,14 @@ int main(int argc, char *argv[])
 
     count = 0;  
 
-    srand(time(0));
+    
 
     for (i = rank; i < n; i+=numprocs) {
 
 
-        
+       srand(i);
        x = ((double) rand()) / ((double) RAND_MAX);
        y = ((double) rand()) / ((double) RAND_MAX);
-
        
        z = sqrt((x*x)+(y*y));
 
