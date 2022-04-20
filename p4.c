@@ -6,10 +6,8 @@
 
 
 int MPI_FlattreeColective(void *sendbuff, void *recbuff, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
-    int i, err;
+    int err;
     int numprocs, rank, value;
-    int totalcount = 0;
-    int recAux;
 
     MPI_Status status;
 
@@ -18,9 +16,9 @@ int MPI_FlattreeColective(void *sendbuff, void *recbuff, int count, MPI_Datatype
 
     
     if (rank == root){
-        value = ((int*)sendbuff)[0];  //returns the value of process 0
-        for (int k = 0; k < numprocs; k++){   //
-            if (k != root){
+        value = ((int*)sendbuff)[0];  //puts in value the initial value of sendbuff
+        for (int k = 0; k < numprocs; k++){   //loop  <numprocs
+            if (k != root){    //Dont receive in the root process
                 err = MPI_Recv(sendbuff, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (err != MPI_SUCCESS) return err;   //throws error
                 value += ((int*)sendbuff)[0];  //continues summing the values received
@@ -65,10 +63,10 @@ int MPI_BinomialBcast(void *buf, int count, MPI_Datatype datatype, int root, MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for (i = 1; i <= ceil(log2(numprocs)); i++)   //repeats as many floors the tree has
-        if (rank < ipow(2, i-1))
+        if (rank < ipow(2, i-1))        //process < 2^k-1
         {
-            rec = rank + ipow(2, i-1);
-            if (rec < numprocs)
+            rec = rank + ipow(2, i-1);    //chooses the receiver (the next following 2^k-1)
+            if (rec < numprocs)     //the rec has to be less than numprocs
             {
                 err = MPI_Send(buf, count, datatype, rec, 0, comm);
                 if (err != MPI_SUCCESS) return err;
