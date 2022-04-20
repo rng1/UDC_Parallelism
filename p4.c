@@ -5,7 +5,7 @@
 #include <time.h>
 
 
-int MPI_FlattreeColective(void *sendbuff, void *recbuff, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
+int MPI_FlattreeCollective(void *sendbuff, void *recbuff, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
     int err;
     int numprocs, rank, value;
 
@@ -27,7 +27,8 @@ int MPI_FlattreeColective(void *sendbuff, void *recbuff, int count, MPI_Datatype
         }
     } else
     {
-        MPI_Send(sendbuff, 1, MPI_INT, root, rank, MPI_COMM_WORLD);
+        err = MPI_Send(sendbuff, 1, MPI_INT, root, rank, MPI_COMM_WORLD);
+        if (err != MPI_SUCCESS) return err;
     }
        
     ((int*)recbuff)[0] = value;   //pass the total value to the recbuff
@@ -87,9 +88,9 @@ int MPI_BinomialBcast(void *buf, int count, MPI_Datatype datatype, int root, MPI
 
 int main(int argc, char *argv[])
 {
-    int i, done = 0, n, count, countAux;
+    int i, n, count, countAux;
     double PI25DT = 3.141592653589793238462643;
-    double pi, x, y, z, piAux;
+    double pi, x, y, z;
 
     int numprocs, rank;
 
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
             count++;
     }
 
-    MPI_FlattreeColective(&count, &countAux, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_FlattreeCollective(&count, &countAux, 1, MPI_INT, 0, MPI_COMM_WORLD);
     //MPI_Reduce(&pi, &piAux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0){
