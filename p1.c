@@ -6,11 +6,11 @@
 
 int main(int argc, char *argv[])
 {
-    int i, done = 0, n, count;
+    int i;
+    int n, count;
+    int numprocs, rank;
     double PI25DT = 3.141592653589793238462643;
     double pi, x, y, z, piAux;
-
-    int numprocs, rank;
 
     MPI_Status status;
 
@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
     }
     
     pi = ((double) count/(double) n)*4;
-
     printf("proccess %d estimates that pi is: %f \n", rank, pi);
 
     if (rank != 0) {
@@ -54,7 +53,6 @@ int main(int argc, char *argv[])
             MPI_Recv(&piAux, 1, MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             pi += piAux;
         }
-        
         printf("pi is approx. %.16f, Error is %.16f\n", pi, fabs(pi - PI25DT));
     }
     
