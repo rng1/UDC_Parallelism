@@ -4,6 +4,36 @@
 #include <mpi.h>
 #include <time.h>
 
+
+int MPI_FlattreeBcast(void *sendbuf, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
+    int i;
+    int numprocs, rank;
+    int totalcount = 0;
+    int recAux;
+
+    MPI_Status status;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank != root){
+
+        MPI_Send(sendbuf, 1, MPI_INT, 0, 0 , comm); 
+
+    }else{
+
+        for (int i = 1; i < numprocs; ++i)
+
+        {
+            MPI_Recv(&recAux, 1, MPI_INT, i, MPI_ANY_TAG, comm, &status); 
+            
+                totalcount += recAux;
+        }
+    }
+    return totalcount;
+}
+
+
 int ipow(int base, int exp)
 {
     int res = 1;
@@ -56,7 +86,7 @@ int MPI_BinomialBcast(void *buf, int count, MPI_Datatype datatype, int root, MPI
 
 int main(int argc, char *argv[])
 {
-    int i, done = 0, n, count;
+    int i, done = 0, n, count, totalc;
     double PI25DT = 3.141592653589793238462643;
     double pi, x, y, z, piAux;
 
@@ -98,15 +128,20 @@ int main(int argc, char *argv[])
        if(z <= 1.0)
             count++;
     }
-    
-    pi = ((double) count/(double) n)*4.0;
 
-    printf("proccess %d estimates that pi is: %f \n", rank, pi);
-
-    MPI_Reduce(&pi, &piAux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    totalc = MPI_FlattreeBcast(&count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Reduce(&pi, &piAux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0){
-        printf("pi is approx. %.16f, Error is %.16f\n", piAux, fabs(piAux - PI25DT));
+        if(totalc < 0){
+            printf("There was an error");
+        }
+        else{
+            totalc = totalc + count;
+            pi = ((double) totalc/(double) n)*4.0;
+            printf("pi is approx. %.16f, Error is %.16f\n", pi, fabs(pi - PI25DT));
+        }
+        
     }
         
     MPI_Finalize();
