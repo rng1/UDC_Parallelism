@@ -6,10 +6,11 @@
 
 int main(int argc, char *argv[])
 {
-    int i, done = 0, n, count;
+    int i;
+    int n, count;
+    int numprocs, rank;
     double PI25DT = 3.141592653589793238462643;
     double pi, x, y, z, piAux;
-    int numprocs, rank;
 
     MPI_Status status;
 
