@@ -75,6 +75,7 @@ int MPI_BinomialBcast(void *buf, int count, MPI_Datatype datatype, int root, MPI
             // Chooses the receiver (the next following 2^(k-1)) and send to root if it is less than the number of processes.
             rec = rank + ipow(2, i-1);
             if (rec < numprocs) {
+                printf("process %d sends to process %d\n", rank,rec );  //print the process that send/receive
                 err = MPI_Send(buf, count, datatype, rec, 0, comm);
                 if (err != MPI_SUCCESS)
                     return err;
