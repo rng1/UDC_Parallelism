@@ -105,19 +105,34 @@ int main(int argc, char *argv[] ) {
 
 
 
-  for(i=0; i<rows[rank]; i++){
+  for(i=0; i<rows[rank]/N; i++){
     printf("rank = %d, RESULT[%d] = %f\n",rank, i, result[i]);
   }
 
   //printf("\n");
   MPI_Barrier(MPI_COMM_WORLD);
 
+  for(i = 0; i < numprocs; i++){
+    rows[i] = rows[i] / N;
+    displs[i] = displs [i] / N;
+  }
 
-  //MPI_Gatherv(&result, numprocs, MPI_FLOAT, resultAux, &b, &a, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+
+  MPI_Gatherv(&result, rows[rank], MPI_FLOAT, resultAux, rows, displs, MPI_FLOAT, 0, MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if(rank == 0){
+    if (DEBUG){
+      for(i=0;i<N;i++) {
+        printf("ANSWER; %f \n",resultAux[i]);
+      }
+    }
+  }
 
   //MPI_Reduce(&result, &resultAux, numprocs, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  //MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
   //if (rank == 0){
   //  for (int i = 0; i < numprocs; i++)
   //    {
@@ -125,9 +140,8 @@ int main(int argc, char *argv[] ) {
   //    }
   //}
 
+
   MPI_Finalize();
-  free(rows);
-  free(displs);
 
 
   return 0;
