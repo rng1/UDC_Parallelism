@@ -4,7 +4,7 @@
 
 #define DEBUG 1
 
-#define N 5
+#define N 6
 
 int main(int argc, char *argv[] ) {
 
@@ -15,9 +15,10 @@ int main(int argc, char *argv[] ) {
 
   int numprocs, rank;
   int *displs;
-  double rec_buf[N*N];
+  float rec_buf[N*N];
 
   int *rows;
+
 
   MPI_Status status;
 
@@ -25,23 +26,17 @@ int main(int argc, char *argv[] ) {
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-
-  if(numprocs>N){
-    if(rank == 0){
-      printf("Numprocs cant be more than %d\n", N);
-
-    }
-    MPI_Finalize();
-    return 0;
-  }
-
   for(i=0; i<N; i++){
     result[i]=0;
   }
 
+
   rows = malloc(sizeof(int)*N);
   displs = malloc(sizeof(int)*N);
 
+
+  //MIRAR ESTOO
+  
   float rem = N%numprocs;
 
   for (int i = 0; i < numprocs; i++) {
@@ -72,15 +67,16 @@ int main(int argc, char *argv[] ) {
   for (int i = 0; i < (rows[rank]/N); i++){
     for(j=i*N; j<(i+1)*N; j++){
       result[i] += rec_buf[j] * vector[j-(i*N)];
+
     }
   }
-
-  MPI_Barrier(MPI_COMM_WORLD);
 
   for(i = 0; i < numprocs; i++){
     rows[i] = rows[i] / N;
     displs[i] = displs [i] / N;
   }
+
+
 
   MPI_Gatherv(&result, rows[rank], MPI_FLOAT, resultAux, rows, displs, MPI_FLOAT, 0, MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
@@ -88,17 +84,12 @@ int main(int argc, char *argv[] ) {
   if(rank == 0){
     if (DEBUG){
       for(i=0;i<N;i++) {
-        printf("ANSWER: %.f \n",resultAux[i]);
+        printf("ANSWER; %f \n",resultAux[i]);
       }
     }
   }
 
-  MPI_Barrier(MPI_COMM_WORLD);
-
   MPI_Finalize();
-
-  free(rows);
-  free(displs);
 
 
   return 0;
