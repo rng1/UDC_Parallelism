@@ -5,7 +5,7 @@
 
 #define DEBUG 1
 
-#define N 1022
+#define N 1000
 
 int main(int argc, char *argv[] ) {
 
@@ -28,11 +28,16 @@ int main(int argc, char *argv[] ) {
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  rows = malloc(sizeof(int)*N);
+  displs = malloc(sizeof(int)*N);
+
   if(numprocs>N){
     if (rank == 0){
-      printf("ERROR: Execute the program with less than %d numprocs\n", N);
+      printf("ERROR: Execute the program with less than %d numprocs\n", N+1);
     }
     MPI_Finalize();
+    free(rows);
+    free(displs);
     return 0;
   }
 
@@ -41,10 +46,6 @@ int main(int argc, char *argv[] ) {
     result[i]=0;
   }
 
-
-  rows = malloc(sizeof(int)*N);
-  displs = malloc(sizeof(int)*N);
-  
   float rem = N%numprocs;
 
   for (int i = 0; i < numprocs; i++) {
@@ -71,7 +72,7 @@ int main(int argc, char *argv[] ) {
   gettimeofday(&tvscatter1, NULL);
 
   MPI_Scatterv(&matrix, rows, displs, MPI_FLOAT, &rec_buf, N*rows[rank], MPI_FLOAT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&vector, N, MPI_FLOAT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(vector, N, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   gettimeofday(&tvscatter2, NULL);
   gettimeofday(&tvcomp1, NULL);
@@ -79,7 +80,6 @@ int main(int argc, char *argv[] ) {
   for (int i = 0; i < (rows[rank]/N); i++){
     for(j=i*N; j<(i+1)*N; j++){
       result[i] += rec_buf[j] * vector[j-(i*N)];
-
     }
   }
 
@@ -121,13 +121,14 @@ int main(int argc, char *argv[] ) {
   if(rank == 0){
     if (DEBUG){
       for(i=0;i<N;i++) {
-        printf("ANSWER; %.f \n",resultAux[i]);
+        printf("ANSWER [%d]: %.f \n",i,resultAux[i]);
       }
     }
   }
 
   MPI_Finalize();
-
+  free(rows);
+  free(displs);
 
   return 0;
 }
